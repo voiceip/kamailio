@@ -111,14 +111,19 @@ static void ka_options_callback(
 	// accepting 2XX return codes
 	if(ps->code >= 200 && ps->code <= 299) {
 		state = KA_STATE_UP;
-		ka_dest->last_down = time(NULL);
 	} else {
 		state = KA_STATE_DOWN;
-		ka_dest->last_up = time(NULL);
 	}
 
 	LM_DBG("new state is: %d\n", state);
 	if(state != ka_dest->state) {
+
+		if(state == KA_STATE_UP && ka_dest->state == KA_STATE_DOWN) {
+			ka_dest->last_down = time(NULL);
+		} else if (state == KA_STATE_DOWN && ka_dest->state == KA_STATE_UP) {
+			ka_dest->last_up = time(NULL);
+		}
+
 		ka_run_route(msg, &uri, state_routes[state]);
 
 		if(ka_dest->statechanged_clb != NULL) {
